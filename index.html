@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decipher Dashboard Generator</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --surface: #ffffff;
+            --border: #d2d2d7;
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --success: #10b981;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .settings-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background-color: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .settings-row .input-group {
+            flex: 1;
+        }
+        .settings-row input[type="color"] {
+            width: 100%;
+            height: 40px;
+            padding: 2px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            background: white;
+            box-sizing: border-box;
+        }
+        .settings-row select,
+        .settings-row input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+            background-color: white;
+            height: 40px;
+        }
+        .settings-row select:focus,
+        .settings-row input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 13px;
+            background-color: #fafafa;
+            resize: vertical;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        textarea:focus {
+            border-color: var(--accent);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background-color: var(--accent-hover);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button.secondary {
+            background-color: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+        button.secondary:hover {
+            background-color: rgba(79, 70, 229, 0.05);
+            box-shadow: none;
+        }
+        button.success-feedback {
+            color: var(--success) !important;
+            border-color: var(--success) !important;
+            background-color: rgba(16, 185, 129, 0.05) !important;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+            letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dashboard Code Generator</h1>
+    <p>Paste your Decipher XML questions on the left. The tool will safely parse radio and checkbox structures while neutralizing XML formatting errors.</p>
+    
+    <div class="settings-row">
+        <div class="input-group">
+            <label for="themeType">Table Theme</label>
+            <select id="themeType" onchange="toggleCustomColor()">
+                <option value="custom">Custom Color</option>
+                <option value="classic">Classic Grey & White</option>
+            </select>
+        </div>
+        <div class="input-group" id="colorPickerGroup">
+            <label for="themeColor">Theme Primary Color</label>
+            <input type="color" id="themeColor" value="#4f46e5">
+        </div>
+        <div class="input-group">
+            <label for="themeFont">Font Family Name</label>
+            <input type="text" id="themeFont" value="-apple-system, BlinkMacSystemFont, Arial, sans-serif" placeholder="e.g., Arial, 'Open Sans', sans-serif">
+        </div>
+    </div>
+    
+    <div class="grid">
+        <div class="input-group">
+            <label for="xmlInput">Decipher XML Input</label>
+            <textarea id="xmlInput" placeholder="<radio label='QP1'>...</radio>"></textarea>
+        </div>
+        <div class="input-group">
+            <label for="codeOutput">Generated Dashboard Code</label>
+            <textarea id="codeOutput" readonly placeholder="Your HTML, CSS, and JS will appear here..."></textarea>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="copyBtn" class="secondary" onclick="copyCode()">Copy Code</button>
+        <button onclick="generateCode()">Generate Dashboard Code</button>
+    </div>
+
+    <div class="footer">
+        Powered by Priyank and AI !
+    </div>
+</div>
+
+<script>
+// UTILITY: Hide/Show Color Picker based on theme selection
+function toggleCustomColor() {
+    const themeType = document.getElementById('themeType').value;
+    const colorGroup = document.getElementById('colorPickerGroup');
+    if (themeType === 'classic') {
+        colorGroup.style.display = 'none';
+    } else {
+        colorGroup.style.display = 'flex';
+    }
+}
+
+// UTILITY: Advanced XML Sanitizer
+function sanitizeText(str) {
+    return str
+        .replace(/[\u2018\u2019]/g, "'") 
+        .replace(/[\u201C\u201D]/g, '"') 
+        .replace(/[\u2013\u2014]/g, '-') 
+        .replace(/\u2026/g, '...')       
+        .replace(/[\u200B-\u200D\uFEFF]/g, '') 
+        .replace(/\s+([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)=/g, ' $1_$2=') 
+        .replace(/&(?!(?:apos|quot|[gl]t|amp);|#)/g, '&amp;') 
+        .replace(/<(?=[\s0-9])/g, '&lt;'); 
+}
+
+function generateCode() {
+    let rawText = document.getElementById('xmlInput').value;
+    let themeType = document.getElementById('themeType').value;
+    let themeColor = document.getElementById('themeColor').value || '#4f46e5';
+    let themeFont = document.getElementById('themeFont').value || 'sans-serif';
+    
+    const xmlText = sanitizeText(rawText);
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(`<survey>${xmlText}</survey>`, "text/xml");
+    
+    const questions = xmlDoc.querySelectorAll("radio, checkbox");
+    
+    let allQs = [];
+    
+    questions.forEach(q => {
+        const id = q.getAttribute("label");
+        if(!id) return;
+        
+        let title = q.querySelector("title");
+        title = title ? title.textContent.trim() : id;
+        
+        const rowNodes = q.querySelectorAll("row");
+        const colNodes = q.querySelectorAll("col");
+        
+        let rows = Array.from(rowNodes).map(r => ({
+            id: r.getAttribute("label"),
+            text: r.textContent.trim()
+        }));
+        
+        let cols = Array.from(colNodes).map(c => ({
+            id: c.getAttribute("label"),
+            text: c.textContent.trim()
+        }));
+        
+        if(cols.length > 0) {
+            allQs.push({ type: 'grid', id, title, rows, cols });
+        } else {
+            allQs.push({ type: 'standard', id, title, rows });
+        }
+    });
+    
+    // ---------------------------------------------------------
+    // BUILD THE HTML STRING
+    // ---------------------------------------------------------
+    let out = `filter id=db-9 default=1 "status.qualified"\n\nhtml width=12\n\n`;
+    
+    // Inject Chart.js Core Library
+    out += `<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>\n\n`;
+    
+    out += `<div id="resultsDIVid" class="resultsDIV">\n\n`;
+    
+    allQs.forEach((q, index) => {
+        let marginTop = index === 0 ? "0px" : "40px";
+        
+        // --- VIEW TOGGLES FOR EACH QUESTION ---
+        out += `<div class="view-toggles" id="toggles_${q.id}" style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; margin-top: ${marginTop};">\n`;
+        out += `    <button class="toggle-btn active-btn" onclick="switchView('${q.id}', 'table')">Table</button>\n`;
+        out += `    <button class="toggle-btn" onclick="switchView('${q.id}', 'bar')">Bar Chart</button>\n`;
+        if (q.type === 'standard') {
+            out += `    <button class="toggle-btn" onclick="switchView('${q.id}', 'pie')">Pie Chart</button>\n`;
+        }
+        out += `</div>\n`;
+
+        // --- WRAPPER FOR TABLE VIEW ---
+        out += `<div id="view_table_${q.id}">\n`;
+        
+        if (q.type === 'standard') {
+            out += `<table class="columnHeaders" id="${q.id}_Table">\n`;
+            out += `    <tr class="headerRow">\n`;
+            out += `        <td class="ch1"><span class="headerClick" onclick="toggleSection('${q.id}');">${q.id}. ${q.title}</span></td>\n`;
+            out += `        <td class="chDataHeader">Count (%)</td>\n`;
+            out += `    </tr>\n\n`;
+            
+            out += `    <tbody id="${q.id}">\n`;
+            
+            q.rows.forEach(r => {
+                out += `        <tr class="sectionRow">\n`;
+                out += `            <td class="ch1" style="padding-left: 15px;"><b>${r.text}</b></td>\n`;
+                out += `            <td class="chData"><span class="valCount">{{${q.id}.${r.id}}}</span><br><span class="valPerc"></span></td>\n`;
+                out += `         </tr>\n`;
+            });
+            
+            out += `        <tr class="sectionRow totalRow">\n`;
+            out += `            <td class="ch1" style="padding-left: 15px;"><b>Total</b></td> \n`;
+            out += `            <td class="chTotalData"><span class="valCount"></span><br><span class="valPerc"></span></td>\n`;
+            out += `        </tr>\n`;
+            out += `    </tbody>\n`;
+            out += `</table>\n`;
+            
+        } else if (q.type === 'grid') {
+            out += `<table class="columnHeaders" id="${q.id}_Table">\n`;
+            out += `    <tr class="headerRow">\n`;
+            out += `        <td class="chBrand">${q.id}. ${q.title}</td>\n`;
+            
+            q.cols.forEach(c => {
+                out += `        <td class="chScale">${c.text}</td>\n`;
+            });
+            out += `        <td class="chTotal">Total</td>\n`;
+            out += `    </tr>\n`;
+            
+            q.rows.forEach(r => {
+                out += `    <tr class="gridRow">\n`;
+                out += `        <td class="chBrand"><b>${r.text}</b></td>\n`;
+                q.cols.forEach(c => {
+                    out += `        <td class="chData"><span class="valCount">{{${q.id}.${r.id}.${c.id}}}</span><br><span class="valPerc"></span></td>\n`;
+                });
+                out += `        <td class="chTotalData"></td>\n`;
+                out += `    </tr>\n`;
+            });
+            out += `</table>\n`;
+        }
+        out += `</div>\n`; // End Table Wrapper
+
+        // --- WRAPPER FOR CHART VIEW ---
+        out += `<div id="view_chart_${q.id}" style="display: none; background: #ffffff; padding: 20px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.06); height: 400px; box-sizing: border-box;">\n`;
+        out += `    <canvas id="canvas_${q.id}"></canvas>\n`;
+        out += `</div>\n\n`; // End Chart Wrapper
+    });
+    
+    out += `</div>\n\n`;
+
+    // INJECT DYNAMIC OR CLASSIC CSS
+    out += `<style id="dashboardStyles">\n`;
+    out += `/* ------------------------------------------- */\n`;
+    out += `/* GLOBAL TABLE CSS                            */\n`;
+    out += `/* ------------------------------------------- */\n`;
+    out += `.resultsDIV { font-family: ${themeFont}; padding: 10px 0; }\n`;
+    
+    // Toggle Button CSS
+    out += `.toggle-btn { padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; color: #4b5563; transition: all 0.2s; font-family: inherit; }\n`;
+    out += `.toggle-btn:hover { background: #e5e7eb; }\n`;
+    
+    if (themeType === 'classic') {
+        out += `.active-btn { background: #495057 !important; color: #fff !important; border-color: #495057 !important; }\n`;
+        out += `.active-btn:hover { background: #343a40 !important; }\n`;
+        out += `.columnHeaders { width: 100%; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-size: 14px; color: #333; border: 1px solid #e2e2e8; }
+.columnHeaders .headerRow td { text-align: center; font-weight: 600; background-color: #f8f9fa; color: #495057; padding: 14px 12px; border-bottom: 2px solid #e9ecef; }
+.columnHeaders td { border-bottom: 1px solid #f1f3f5; padding: 12px 14px; transition: background-color 0.2s ease; }
+.columnHeaders tr:last-child td { border-bottom: none; }
+.columnHeaders tr.sectionRow:hover, .columnHeaders tr.gridRow:hover { background-color: #f8f9fa; }
+.chData { text-align: center; }
+.chTotalData { text-align: center; font-weight: 600; background-color: #f4f6f8; color: #212529; }
+.valCount { font-weight: 600; font-size: 14px; color: #1d1d1f; }
+.valPerc { font-size: 12px; color: #868e96; display: block; margin-top: 3px; }
+.ch1 { width: 75%; text-align: left; color: #495057; }
+.chDataHeader { width: 25%; text-align: center; }
+.headerClick { cursor: pointer; display: block; color: inherit; transition: opacity 0.2s; }
+.headerClick:hover { opacity: 0.7; }
+.totalRow .ch1 { background-color: #f4f6f8; font-weight: 600; color: #212529; }
+.totalRow .chTotalData { background-color: #f4f6f8; border-top: 2px solid #e9ecef; }
+.chBrand { width: 25%; text-align: left; font-weight: 500; color: #495057; border-right: 1px solid #f1f3f5; }
+.chScale { width: 12%; font-size: 13px; }
+.chTotal { width: 15%; border-left: 1px solid #f1f3f5; }
+.gridRow .chTotalData { border-left: 1px solid #f1f3f5; }
+`;
+    } else {
+        out += `.active-btn { background: ${themeColor} !important; color: #fff !important; border-color: ${themeColor} !important; }\n`;
+        out += `.active-btn:hover { opacity: 0.9; }\n`;
+        out += `.columnHeaders { width: 100%; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); font-size: 14px; color: #333; border: 1px solid #e5e7eb; }
+.columnHeaders .headerRow td { text-align: center; font-weight: 600; background-color: ${themeColor}; color: #ffffff; padding: 14px 12px; border-bottom: none; }
+.columnHeaders td { border-bottom: 1px solid #f3f4f6; padding: 12px 14px; transition: background-color 0.2s ease; }
+.columnHeaders tr:last-child td { border-bottom: none; }
+.columnHeaders tr.sectionRow:hover, .columnHeaders tr.gridRow:hover { background-color: ${themeColor}12; }
+.chData { text-align: center; }
+.chTotalData { text-align: center; font-weight: 700; background-color: ${themeColor}1A; color: ${themeColor}; }
+.valCount { font-weight: 600; font-size: 14px; color: #1f2937; }
+.valPerc { font-size: 12px; color: ${themeColor}; display: block; margin-top: 3px; font-weight: 500; }
+.ch1 { width: 75%; text-align: left; color: #1f2937; }
+.chDataHeader { width: 25%; text-align: center; }
+.headerClick { cursor: pointer; display: block; color: inherit; font-weight: 700; letter-spacing: 0.3px; transition: opacity 0.2s; }
+.headerClick:hover { opacity: 0.8; text-decoration: underline; text-underline-offset: 4px; }
+.totalRow .ch1 { background-color: ${themeColor}1A; font-weight: 700; color: ${themeColor}; }
+.totalRow .chTotalData { background-color: ${themeColor}1A; }
+.chBrand { width: 25%; text-align: left; font-weight: 600; color: #374151; background-color: #fafaf9; border-right: 1px solid #f3f4f6; }
+.chScale { width: 12%; font-size: 13px; }
+.chTotal { width: 15%; border-left: 1px solid #f3f4f6; }
+.gridRow .chTotalData { border-left: 1px solid #f3f4f6; }
+`;
+    }
+    
+    out += `</style>\n\n`;
+
+    out += `<script>
+var activeCharts = {};
+
+setTimeout(function(){
+    calculateStandardData();
+    calculateGridPercentages();
+}, 400);
+
+/* TOGGLE ROW VISIBILITY FOR VERTICAL TABLES */
+function toggleSection(secNum){
+    $('#' + secNum).toggle(400);
+}
+
+/* CHART VIEW TOGGLE HANDLER */
+function switchView(qId, viewType) {
+    // Update Button States
+    var toggleContainer = document.getElementById('toggles_' + qId);
+    var btns = toggleContainer.getElementsByClassName('toggle-btn');
+    var matchText = viewType === 'table' ? 'Table' : (viewType === 'bar' ? 'Bar Chart' : 'Pie Chart');
+    
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('active-btn');
+        if (btns[i].innerText === matchText) {
+            btns[i].classList.add('active-btn');
+        }
+    }
+
+    // Toggle Container Visibility
+    if (viewType === 'table') {
+        document.getElementById('view_chart_' + qId).style.display = 'none';
+        document.getElementById('view_table_' + qId).style.display = 'block';
+    } else {
+        document.getElementById('view_table_' + qId).style.display = 'none';
+        document.getElementById('view_chart_' + qId).style.display = 'block';
+        renderChart(qId, viewType);
+    }
+}
+
+/* CHART.JS RENDER ENGINE */
+function renderChart(qId, type) {
+    var table = $('#' + qId + '_Table');
+    var canvas = document.getElementById('canvas_' + qId);
+    var ctx = canvas.getContext('2d');
+
+    // Destroy existing chart to prevent hover-glitches from overlapping canvases
+    if (activeCharts[qId]) {
+        activeCharts[qId].destroy();
+    }
+
+    var isGrid = table.find('.gridRow').length > 0;
+    var labels = [];
+    var datasets = [];
+
+    // Colors matching dashboard configuration
+    var themeColor = '${themeColor}';
+    if ('${themeType}' === 'classic') themeColor = '#495057';
+    
+    // Vibrant array to separate segments cleanly on Pies and Grids
+    var bgColors = [themeColor, '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#14b8a6'];
+
+    if (!isGrid) {
+        // Parse Standard Table
+        var data = [];
+        table.find('tbody .sectionRow:not(.totalRow)').each(function() {
+            labels.push($(this).find('.ch1 b').text().trim());
+            data.push(parseInt($(this).find('.valCount').text().replace(/,/g, '').trim()) || 0);
+        });
+
+        datasets.push({
+            label: 'Responses',
+            data: data,
+            backgroundColor: type === 'pie' ? bgColors.slice(0, data.length) : themeColor,
+            borderWidth: 1
+        });
+        
+    } else {
+        // Parse Grid Table
+        var cols = [];
+        table.find('.headerRow .chScale').each(function() {
+            cols.push($(this).text().trim());
+        });
+
+        table.find('.gridRow').each(function() {
+            labels.push($(this).find('.chBrand b').text().trim());
+        });
+
+        for (var i = 0; i < cols.length; i++) {
+            var colData = [];
+            table.find('.gridRow').each(function() {
+                var valStr = $(this).find('.chData').eq(i).find('.valCount').text().replace(/,/g, '').trim();
+                colData.push(parseInt(valStr) || 0);
+            });
+            datasets.push({
+                label: cols[i],
+                data: colData,
+                backgroundColor: bgColors[i % bgColors.length],
+                borderWidth: 1
+            });
+        }
+        type = 'bar'; // Force grids to grouped bars
+    }
+
+    // Generate Chart Instance
+    activeCharts[qId] = new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: isGrid || type === 'pie',
+                    position: 'bottom',
+                    labels: { font: { family: '${themeFont}'.split(',')[0], size: 12 } }
+                }
+            },
+            scales: type === 'pie' ? {} : {
+                y: { 
+                    beginAtZero: true,
+                    ticks: { font: { family: '${themeFont}'.split(',')[0] } }
+                },
+                x: {
+                    ticks: { font: { family: '${themeFont}'.split(',')[0] } }
+                }
+            }
+        }
+    });
+}
+
+/* MATH FOR VERTICAL QUESTIONS */
+function calculateStandardData(){
+    $('tbody').each(function(){
+        var actualCountTotal = 0;
+        var rows = $(this).find('.sectionRow:not(.totalRow)');
+        
+        if(rows.length === 0) return;
+
+        rows.each(function() {
+            var countText = $(this).find('.valCount').text().replace(/,/g, '').trim();
+            var count = parseInt(countText) || 0;
+            actualCountTotal += count;
+        });
+
+        rows.each(function() {
+            var countText = $(this).find('.valCount').text().replace(/,/g, '').trim();
+            var count = parseInt(countText) || 0;
+            var perc = 0;
+            
+            if (actualCountTotal > 0) {
+                perc = (count / actualCountTotal) * 100;
+            }
+            
+            $(this).find('.valPerc').text("(" + perc.toFixed(1) + "%)");
+        });
+
+        $(this).find('.totalRow .valCount').text(actualCountTotal);
+        var totalPerc = actualCountTotal > 0 ? "(100.0%)" : "(0.0%)";
+        $(this).find('.totalRow .valPerc').text(totalPerc);
+    });
+}
+
+/* MATH FOR HORIZONTAL GRID QUESTIONS */
+function calculateGridPercentages(){
+    $('.gridRow').each(function(){
+        var rowTotal = 0;
+        var counts = $(this).find('.valCount');
+        
+        counts.each(function() {
+            var valText = $(this).text().replace(/,/g, '').trim();
+            var val = parseInt(valText) || 0;
+            rowTotal += val;
+        });
+        
+        $(this).find('.chTotalData').text(rowTotal);
+        
+        $(this).find('.chData').each(function() {
+            var countElem = $(this).find('.valCount');
+            var percElem = $(this).find('.valPerc');
+            var countText = countElem.text().replace(/,/g, '').trim();
+            var count = parseInt(countText) || 0;
+            var perc = 0;
+            
+            if (rowTotal > 0) {
+                perc = (count / rowTotal) * 100;
+            }
+            
+            percElem.text("(" + perc.toFixed(1) + "%)");
+        });
+    });
+}
+<\/script>
+end`;
+
+    document.getElementById('codeOutput').value = out;
+}
+
+function copyCode() {
+    const outputField = document.getElementById('codeOutput');
+    const copyBtn = document.getElementById('copyBtn');
+    
+    if (!outputField.value) return;
+    
+    navigator.clipboard.writeText(outputField.value).then(() => {
+        const originalText = copyBtn.innerText;
+        copyBtn.innerText = "Copied!";
+        copyBtn.classList.add('success-feedback');
+        
+        setTimeout(() => {
+            copyBtn.innerText = originalText;
+            copyBtn.classList.remove('success-feedback');
+        }, 2000);
+    }).catch(err => {
+        console.error("Failed to copy code text: ", err);
+    });
+}
+</script>
+</body>
+</html>
